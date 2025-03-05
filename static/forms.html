@@ -8,7 +8,8 @@
 </form>
 <ul>
     {{range .Recipes}}
-        <li>{{.Title}}</li>
-        <li>{{.Description}}</li>
+        <li name="displayTitle">Title: {{.Title}}</li>
+        <li name="displayDescription">Description: {{.Description}}</li>
+        <br />
     {{end}}
 </ul>

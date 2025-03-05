@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -27,13 +28,20 @@ func main() {
 	tmpl := template.Must(template.ParseFiles("./static/forms.html"))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		recipe := Recipe{
-			Title:       r.FormValue("title"),
-			Description: r.FormValue("description"),
+		if r.FormValue("title") != "" && r.FormValue("description") != "" {
+			currentRecipes, err := os.ReadFile(filename)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			recipe := Recipe{
+				Title:       r.FormValue("title"),
+				Description: r.FormValue("description"),
+			}
+			newRecipe := fmt.Sprintf("%s\t%s\n", recipe.Title, recipe.Description)
+			updatedRecipes := append(currentRecipes, []byte(newRecipe)...)
+			os.WriteFile(filename, []byte(updatedRecipes), 0644)
 		}
-		formattedRecipe := fmt.Sprintf("%s\t%s\n", recipe.Title, recipe.Description)
-		dataToSave := []byte(formattedRecipe)
-		os.WriteFile(filename, dataToSave, 0644)
 
 		b, err := os.ReadFile(filename)
 		if err != nil {
@@ -41,7 +49,6 @@ func main() {
 		}
 		rawRecipes := strings.Split(string(b), "\n")
 		rawRecipes = rawRecipes[:len(rawRecipes)-1]
-		fmt.Printf(rawRecipes[0])
 		var recipes []Recipe
 		for _, raw := range rawRecipes {
 			rawParts := strings.Split(raw, "\t")
