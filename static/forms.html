@@ -1,12 +1,14 @@
-{{if .Success}}
-    <h1>Thanks for your message!</h1>
-{{else}}
-    <h1>Contact</h1>
-    <form method="POST">
-        <label>Title:</label><br />
-        <input type="text" name="title"><br />
-        <label>Description:</label><br />
-        <input type="text" name="description"><br />
-        <input type="submit" name="submit">
-    </form>
-{{end}}
+<h1>Recipe</h1>
+<form method="POST">
+    <label>Title:</label><br />
+    <input type="text" name="title"><br />
+    <label>Description:</label><br />
+    <input type="text" name="description"><br />
+    <input type="submit" name="submit">
+</form>
+<ul>
+    {{range .Recipes}}
+        <li>{{.Title}}</li>
+        <li>{{.Description}}</li>
+    {{end}}
+</ul>

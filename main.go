@@ -1,73 +1,54 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
 	"os"
+	"strings"
 )
-
-// start version controlling!
-// use playwright
 
 type Recipe struct {
 	Title       string
 	Description string
 }
 
-type TodoPageData struct {
-	PageTitle string
-	Todos     []Recipe
-}
-
-type ContactDetails struct {
-	Email   string
-	Subject string
-	Message string
+type FormData struct {
+	Recipes []Recipe
 }
 
 func main() {
+	filename := "./test.txt"
+	if _, err := os.Stat(filename); errors.Is(err, os.ErrNotExist) {
+		os.Create(filename)
+	}
+
 	tmpl := template.Must(template.ParseFiles("./static/forms.html"))
-	// http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-	// 	data := TodoPageData{
-	// 		PageTitle: "My TODO list",
-	// 		Todos: []Recipe{
-	// 			{Name: "Rec 1", Description: "om nom nom"},
-	// 			{Name: "Rec 2", Description: "om nom nom"},
-	// 			{Name: "Rec 3", Description: "om nom nom"},
-	// 		},
-	// 	}
-	// 	tmpl.Execute(w, data)
-	// })
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			tmpl.Execute(w, nil)
-			return
-		}
-
 		recipe := Recipe{
 			Title:       r.FormValue("title"),
 			Description: r.FormValue("description"),
 		}
-
-		filename := "./test.txt"
-
 		formattedRecipe := fmt.Sprintf("%s\t%s\n", recipe.Title, recipe.Description)
 		dataToSave := []byte(formattedRecipe)
+		os.WriteFile(filename, dataToSave, 0644)
 
-		f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+		b, err := os.ReadFile(filename)
 		if err != nil {
 			panic(err)
 		}
-
-		defer f.Close()
-
-		if _, err = f.WriteString(string(dataToSave)); err != nil {
-			panic(err)
+		rawRecipes := strings.Split(string(b), "\n")
+		rawRecipes = rawRecipes[:len(rawRecipes)-1]
+		fmt.Printf(rawRecipes[0])
+		var recipes []Recipe
+		for _, raw := range rawRecipes {
+			rawParts := strings.Split(raw, "\t")
+			recipes = append(recipes, Recipe{Title: rawParts[0], Description: rawParts[1]})
 		}
 
-		tmpl.Execute(w, struct{ Success bool }{true})
+		tmpl.Execute(w, FormData{Recipes: recipes})
 	})
 
 	http.ListenAndServe("127.0.0.1:80", nil)
