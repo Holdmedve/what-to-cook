@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 type Recipe struct {
@@ -27,8 +29,10 @@ func main() {
 
 	tmpl := template.Must(template.ParseFiles("./static/forms.html"))
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.FormValue("title") != "" && r.FormValue("description") != "" {
+	r := mux.NewRouter()
+
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost && r.FormValue("title") != "" && r.FormValue("description") != "" {
 			currentRecipes, err := os.ReadFile(filename)
 			if err != nil {
 				log.Fatal(err)
@@ -41,6 +45,7 @@ func main() {
 			newRecipe := fmt.Sprintf("%s\t%s\n", recipe.Title, recipe.Description)
 			updatedRecipes := append(currentRecipes, []byte(newRecipe)...)
 			os.WriteFile(filename, []byte(updatedRecipes), 0644)
+			http.Redirect(w, r, "/", 303)
 		}
 
 		b, err := os.ReadFile(filename)
@@ -58,5 +63,35 @@ func main() {
 		tmpl.Execute(w, FormData{Recipes: recipes})
 	})
 
-	http.ListenAndServe("127.0.0.1:80", nil)
+	r.HandleFunc("/recipes/{title}", func(w http.ResponseWriter, r *http.Request) {
+		if r.FormValue("_method") != "delete" {
+			w.Write([]byte("I was expecting _method to be equal to delete"))
+			return
+		}
+
+		vars := mux.Vars(r)
+		titleOfRecipeToDelete := vars["title"]
+
+		b, err := os.ReadFile(filename)
+		if err != nil {
+			panic(err)
+		}
+
+		recipes := strings.Split(string(b), "\n")
+		recipes = recipes[:len(recipes)-1]
+		var updatedRecipes string
+		for _, r := range recipes {
+			title := strings.Split(r, "\t")[0]
+			if title == titleOfRecipeToDelete {
+				continue
+			}
+			updatedRecipes += r + "\n"
+		}
+
+		os.WriteFile(filename, []byte(updatedRecipes), 0222)
+
+		http.Redirect(w, r, "/", 303)
+	})
+
+	http.ListenAndServe("127.0.0.1:80", r)
 }

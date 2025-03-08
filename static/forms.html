@@ -1,15 +1,19 @@
-<h1>Recipe</h1>
+<h1>New recipe</h1>
 <form method="POST">
     <label>Title:</label><br />
     <input type="text" name="title"><br />
     <label>Description:</label><br />
     <input type="text" name="description"><br />
-    <input type="submit" name="submit">
+    <input type="submit" value="Save" name="submit">
 </form>
 <ul>
     {{range .Recipes}}
-        <li name="displayTitle">Title: {{.Title}}</li>
-        <li name="displayDescription">Description: {{.Description}}</li>
-        <br />
+        <form action="/recipes/{{.Title}}" method="POST" data-recipe={{.Title}}>
+            <li name="displayTitle">Title: {{.Title}}</li>
+            <li name="displayDescription">Description: {{.Description}}</li>
+            <input type="submit" name="deleteBtn" value="Delete">
+            <input type="hidden" name="_method" value="delete">
+            <br />
+        </form>
     {{end}}
 </ul>
