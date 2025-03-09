@@ -5,42 +5,19 @@ import (
 	"os"
 	"strings"
 	"testing"
-
-	"github.com/playwright-community/playwright-go"
 )
 
-func assertErrorToNilf(message string, err error) {
-	if err != nil {
-		log.Fatalf(message, err)
-	}
-}
+const recipeFilePath = "test.txt"
 
 func TestSubmittedRecipeIsSaved(t *testing.T) {
-	recipeFilePath := "test.txt"
-	file, err := os.Create(recipeFilePath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-	pw, err := playwright.Run()
-	assertErrorToNilf("could not launch playwright: %w", err)
-	browser, err := pw.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
-		Headless: playwright.Bool(false),
-	})
-	assertErrorToNilf("could not launch Chromium: %w", err)
-	context, err := browser.NewContext()
-	assertErrorToNilf("could not create context: %w", err)
-	page, err := context.NewPage()
-	assertErrorToNilf("could not create page: %w", err)
-	_, err = page.Goto("127.0.0.1:80")
+	setupRecipeFile(recipeFilePath)
+	page := setupPage()
+	_, err := page.Goto("127.0.0.1:80")
 	assertErrorToNilf("could not goto: %w", err)
-	err = page.Locator("[name='title']").Fill("test-recipe-name")
-	assertErrorToNilf("could not locate and fill: %w", err)
-	err = page.Locator("[name='description']").Fill("test-recipe-description")
-	assertErrorToNilf("could not locate and fill: %w", err)
+	fillPage(page, "[name='title']", "test-recipe-name")
+	fillPage(page, "[name='description']", "test-recipe-description")
 
-	err = page.Locator("[name='submit']").Click()
-	assertErrorToNilf("could not locate and click: %w", err)
+	clickPage(page, "[name='submit']")
 
 	b, err := os.ReadFile(recipeFilePath)
 	if err != nil {
@@ -54,43 +31,22 @@ func TestSubmittedRecipeIsSaved(t *testing.T) {
 }
 
 func Test_Submit2Recipes_BothAreDisplayed(t *testing.T) {
-	recipeFilePath := "test.txt"
-	file, err := os.Create(recipeFilePath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-	defer os.Create(recipeFilePath)
-	pw, err := playwright.Run()
-	assertErrorToNilf("could not launch playwright: %w", err)
-	browser, err := pw.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
-		Headless: playwright.Bool(false),
-	})
-	assertErrorToNilf("could not launch Chromium: %w", err)
-	context, err := browser.NewContext()
-	assertErrorToNilf("could not create context: %w", err)
-	page, err := context.NewPage()
-	assertErrorToNilf("could not create page: %w", err)
-	_, err = page.Goto("127.0.0.1:80")
+	setupRecipeFile(recipeFilePath)
+	page := setupPage()
+	_, err := page.Goto("127.0.0.1:80")
 	assertErrorToNilf("could not goto: %w", err)
 	testRecipeTitleA := "testRecipeTitleA"
 	testRecipeDescriptionA := "testRecipeDescriptioncA"
 	testRecipeTitleB := "testRecipeTitleB"
 	testRecipeDescriptionB := "testRecipeDescriptioncB"
 
-	err = page.Locator("[name='title']").Fill(testRecipeTitleA)
-	assertErrorToNilf("could not locate and fill: %w", err)
-	err = page.Locator("[name='description']").Fill(testRecipeDescriptionA)
-	assertErrorToNilf("could not locate and fill: %w", err)
-	err = page.Locator("[name='submit']").Click()
-	assertErrorToNilf("could not locate and click: %w", err)
+	fillPage(page, "[name='title']", testRecipeTitleA)
+	fillPage(page, "[name='description']", testRecipeDescriptionA)
+	clickPage(page, "[name='submit']")
 
-	err = page.Locator("[name='title']").Fill(testRecipeTitleB)
-	assertErrorToNilf("could not locate and fill: %w", err)
-	err = page.Locator("[name='description']").Fill(testRecipeDescriptionB)
-	assertErrorToNilf("could not locate and fill: %w", err)
-	err = page.Locator("[name='submit']").Click()
-	assertErrorToNilf("could not locate and click: %w", err)
+	fillPage(page, "[name='title']", testRecipeTitleB)
+	fillPage(page, "[name='description']", testRecipeDescriptionB)
+	clickPage(page, "[name='submit']")
 
 	titleLocator, err := page.Locator("[name='displayTitle']").All()
 	if len(titleLocator) != 2 {
@@ -122,24 +78,9 @@ func Test_Submit2Recipes_BothAreDisplayed(t *testing.T) {
 }
 
 func Test_Submit3RecipesDelete2nd_1stAnd3rdAreDisplayed(t *testing.T) {
-	recipeFilePath := "test.txt"
-	file, err := os.Create(recipeFilePath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-	defer os.Create(recipeFilePath)
-	pw, err := playwright.Run()
-	assertErrorToNilf("could not launch playwright: %w", err)
-	browser, err := pw.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
-		Headless: playwright.Bool(false),
-	})
-	assertErrorToNilf("could not launch Chromium: %w", err)
-	context, err := browser.NewContext()
-	assertErrorToNilf("could not create context: %w", err)
-	page, err := context.NewPage()
-	assertErrorToNilf("could not create page: %w", err)
-	_, err = page.Goto("127.0.0.1:80")
+	setupRecipeFile(recipeFilePath)
+	page := setupPage()
+	_, err := page.Goto("127.0.0.1:80")
 	assertErrorToNilf("could not goto: %w", err)
 
 	testRecipeTitleA := "testRecipeTitleA"
@@ -149,26 +90,17 @@ func Test_Submit3RecipesDelete2nd_1stAnd3rdAreDisplayed(t *testing.T) {
 	testRecipeTitleC := "testRecipeTitleC"
 	testRecipeDescriptionC := "testRecipeDescriptioncC"
 
-	err = page.Locator("[name='title']").Fill(testRecipeTitleA)
-	assertErrorToNilf("could not locate and fill: %w", err)
-	err = page.Locator("[name='description']").Fill(testRecipeDescriptionA)
-	assertErrorToNilf("could not locate and fill: %w", err)
-	err = page.Locator("[name='submit']").Click()
-	assertErrorToNilf("could not locate and click: %w", err)
+	fillPage(page, "[name='title']", testRecipeTitleA)
+	fillPage(page, "[name='description']", testRecipeDescriptionA)
+	clickPage(page, "[name='submit']")
 
-	err = page.Locator("[name='title']").Fill(testRecipeTitleB)
-	assertErrorToNilf("could not locate and fill: %w", err)
-	err = page.Locator("[name='description']").Fill(testRecipeDescriptionB)
-	assertErrorToNilf("could not locate and fill: %w", err)
-	err = page.Locator("[name='submit']").Click()
-	assertErrorToNilf("could not locate and click: %w", err)
+	fillPage(page, "[name='title']", testRecipeTitleB)
+	fillPage(page, "[name='description']", testRecipeDescriptionB)
+	clickPage(page, "[name='submit']")
 
-	err = page.Locator("[name='title']").Fill(testRecipeTitleC)
-	assertErrorToNilf("could not locate and fill: %w", err)
-	err = page.Locator("[name='description']").Fill(testRecipeDescriptionC)
-	assertErrorToNilf("could not locate and fill: %w", err)
-	err = page.Locator("[name='submit']").Click()
-	assertErrorToNilf("could not locate and click: %w", err)
+	fillPage(page, "[name='title']", testRecipeTitleC)
+	fillPage(page, "[name='description']", testRecipeDescriptionC)
+	clickPage(page, "[name='submit']")
 
 	deleteBtns, err := page.Locator("[name='deleteBtn']").All()
 	assertErrorToNilf("could not locate and fill: %w", err)
