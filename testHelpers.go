@@ -47,10 +47,10 @@ func setupPage() playwright.Page {
 
 func setupRecipeFile(filePath string) {
 	file, err := os.Create(filePath)
-	defer file.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer file.Close()
 }
 
 func saveRecipe(page playwright.Page, title string, descr string) {
@@ -84,7 +84,7 @@ func assertRecipeIsDisplayed(page playwright.Page, expectedTitle string, expecte
 	containsTitle := slices.ContainsFunc(actualTitles, func(s string) bool {
 		return strings.Contains(s, expectedTitle)
 	})
-	if containsTitle == false {
+	if !containsTitle {
 		log.Fatalf("expected title %s was not found", expectedTitle)
 	}
 
@@ -97,7 +97,7 @@ func assertRecipeIsDisplayed(page playwright.Page, expectedTitle string, expecte
 	containsDescr := slices.ContainsFunc(actualDescriptions, func(s string) bool {
 		return strings.Contains(s, expectedDescr)
 	})
-	if containsDescr == false {
+	if !containsDescr {
 		log.Fatalf("expected description %s was not found", expectedDescr)
 	}
 }

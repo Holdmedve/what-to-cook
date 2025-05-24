@@ -7,13 +7,21 @@
     <input type="submit" value="Save" name="submit">
 </form>
 <ul>
-    {{range .Recipes}}
+    {{range .RecipeViews}}
         <form action="/recipes/{{.Title}}" method="POST" data-recipe={{.Title}}>
-            <li name="displayTitle">Title: {{.Title}}</li>
-            <li name="displayDescription">Description: {{.Description}}</li>
-            <input type="submit" name="deleteBtn" value="Delete">
-            <input type="hidden" name="_method" value="delete">
-            <br />
+            {{if .Edit}}
+                <input type="hidden" name="oldTitle" value="{{.Title}}">
+                <label for="editTitle">Title</label>
+                <input type="text" name="editTitle" value="{{.Title}}"><br />
+                <label for="editDescriptiton">Description </label>
+                <input type="text" name="editDescription" value="{{.Description}}">
+                <input type="submit" name="updateBtn" value="Update">
+            {{else}}
+                <li name="displayTitle">Title: {{.Title}}</li>
+                <li name="displayDescription">Description: {{.Description}}</li>
+                <input type="submit" name="deleteBtn" value="Delete">
+                <input type="submit" name="editBtn" value="Edit">
+            {{end}}
         </form>
     {{end}}
 </ul>

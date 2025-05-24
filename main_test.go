@@ -6,7 +6,10 @@ import (
 	"testing"
 )
 
-const recipeFilePath = "test.txt"
+// TODO create config logic that relies on an ENV env var
+// if set to prod use recipes.txt otherwise test-recipes.txt
+// ...or don't run the tests on prod
+const recipeFilePath = "recipes.txt"
 
 func TestSubmittedRecipeIsSaved(t *testing.T) {
 	page := setup(recipeFilePath)
@@ -54,13 +57,32 @@ func Test_Submit3RecipesDelete2nd_1stAnd3rdAreDisplayed(t *testing.T) {
 	saveRecipe(page, testRecipeTitleB, testRecipeDescriptionB)
 	saveRecipe(page, testRecipeTitleC, testRecipeDescriptionC)
 	deleteBtns, err := page.Locator("[name='deleteBtn']").All()
-	assertErrorToNilf("could not locate and fill: %w", err)
+	assertErrorToNilf("could not locate: %w", err)
 	deleteBtns[1].Click()
 
-	titleLocator, err := page.Locator("[name='displayTitle']").All()
+	titleLocator, _ := page.Locator("[name='displayTitle']").All()
 	if len(titleLocator) != 2 {
 		log.Fatalf("there should be exactly 2 titles, found: %d", len(titleLocator))
 	}
 	assertRecipeIsDisplayed(page, testRecipeTitleA, testRecipeDescriptionA)
 	assertRecipeIsDisplayed(page, testRecipeTitleC, testRecipeDescriptionC)
+}
+
+func Test_SubmitRecipeThenEditIt_UpdatedValuesAreDisplayed(t *testing.T) {
+	page := setup(recipeFilePath)
+	defer teardown(page, recipeFilePath)
+	testRecipeTitle := "testRecipeTitle"
+	testRecipeDescription := "testRecipeDescription"
+	updatedTestRecipeTitle := "updatedTestRecipeTitle"
+	updatedTestRecipeDescription := "updatedTestRecipeDescription"
+
+	saveRecipe(page, testRecipeTitle, testRecipeDescription)
+	editBtns, err := page.Locator("[name='editBtn']").All()
+	assertErrorToNilf("could not locate: %w", err)
+	editBtns[0].Click()
+	fillPage(page, "[name='editTitle']", updatedTestRecipeTitle)
+	fillPage(page, "[name='editDescription']", updatedTestRecipeDescription)
+	clickPage(page, "[name='updateBtn']")
+
+	assertRecipeIsDisplayed(page, updatedTestRecipeTitle, updatedTestRecipeDescription)
 }
