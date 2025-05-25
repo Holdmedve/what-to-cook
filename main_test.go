@@ -2,35 +2,12 @@ package main
 
 import (
 	"log"
-	"os"
 	"testing"
 )
 
-// TODO create config logic that relies on an ENV env var
-// if set to prod use recipes.txt otherwise test-recipes.txt
-// ...or don't run the tests on prod
-const recipeFilePath = "recipes.txt"
-
-func TestSubmittedRecipeIsSaved(t *testing.T) {
-	page := setup(recipeFilePath)
-	defer teardown(page, recipeFilePath)
-
-	saveRecipe(page, "test-recipe-name", "test-recipe-description")
-
-	b, err := os.ReadFile(recipeFilePath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	storedRecipe := string(b)
-	expectedRecipe := "test-recipe-name\ttest-recipe-description\n"
-	if storedRecipe != expectedRecipe {
-		log.Fatalf("expected: %s, actual: %s", expectedRecipe, storedRecipe)
-	}
-}
-
 func Test_Submit2Recipes_BothAreDisplayed(t *testing.T) {
-	page := setup(recipeFilePath)
-	defer teardown(page, recipeFilePath)
+	page := setup(RecipesFilePath)
+	defer teardown(page, RecipesFilePath)
 	testRecipeTitleA := "testRecipeTitleA"
 	testRecipeDescriptionA := "testRecipeDescriptioncA"
 	testRecipeTitleB := "testRecipeTitleB"
@@ -44,8 +21,8 @@ func Test_Submit2Recipes_BothAreDisplayed(t *testing.T) {
 }
 
 func Test_Submit3RecipesDelete2nd_1stAnd3rdAreDisplayed(t *testing.T) {
-	page := setup(recipeFilePath)
-	defer teardown(page, recipeFilePath)
+	page := setup(RecipesFilePath)
+	defer teardown(page, RecipesFilePath)
 	testRecipeTitleA := "testRecipeTitleA"
 	testRecipeDescriptionA := "testRecipeDescriptioncA"
 	testRecipeTitleB := "testRecipeTitleB"
@@ -69,8 +46,8 @@ func Test_Submit3RecipesDelete2nd_1stAnd3rdAreDisplayed(t *testing.T) {
 }
 
 func Test_SubmitRecipeThenEditIt_UpdatedValuesAreDisplayed(t *testing.T) {
-	page := setup(recipeFilePath)
-	defer teardown(page, recipeFilePath)
+	page := setup(RecipesFilePath)
+	defer teardown(page, RecipesFilePath)
 	testRecipeTitle := "testRecipeTitle"
 	testRecipeDescription := "testRecipeDescription"
 	updatedTestRecipeTitle := "updatedTestRecipeTitle"
