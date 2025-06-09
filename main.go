@@ -71,10 +71,8 @@ func main() {
 		} else if r.FormValue("updateBtn") != "" {
 
 			oldTitleOfRecipeToUpdate := r.FormValue("oldTitle")
-			DeleteRecipe(oldTitleOfRecipeToUpdate)
-
 			updatedRecipe := Recipe{Title: r.FormValue("editTitle"), Description: r.FormValue("editDescription")}
-			SaveRecipe(updatedRecipe)
+			UpdateRecipe(oldTitleOfRecipeToUpdate, updatedRecipe)
 
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 		}
