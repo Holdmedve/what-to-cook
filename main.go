@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -38,17 +37,8 @@ func main() {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 		}
 
-		b, err := os.ReadFile(RecipesFilePath)
-		if err != nil {
-			panic(err)
-		}
-		rawRecipes := strings.Split(string(b), "\n")
-		rawRecipes = rawRecipes[:len(rawRecipes)-1]
-		var recipes []Recipe
-		for _, raw := range rawRecipes {
-			rawParts := strings.Split(raw, "\t")
-			recipes = append(recipes, Recipe{Title: rawParts[0], Description: rawParts[1]})
-		}
+		var recipes []Recipe = GetAllRecipes()
+
 		var recipeViews []RecipeView
 		for _, r := range recipes {
 			recipeViews = append(recipeViews, RecipeView{Recipe: r, Edit: false})
@@ -62,41 +52,15 @@ func main() {
 			vars := mux.Vars(r)
 			titleOfRecipeToDelete := vars["title"]
 
-			b, err := os.ReadFile(RecipesFilePath)
-			if err != nil {
-				panic(err)
-			}
-
-			recipes := strings.Split(string(b), "\n")
-			recipes = recipes[:len(recipes)-1]
-			var updatedRecipes string
-			for _, r := range recipes {
-				title := strings.Split(r, "\t")[0]
-				if title == titleOfRecipeToDelete {
-					continue
-				}
-				updatedRecipes += r + "\n"
-			}
-
-			os.WriteFile(RecipesFilePath, []byte(updatedRecipes), 0222)
+			DeleteRecipe(titleOfRecipeToDelete)
 
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 		} else if r.FormValue("editBtn") != "" {
-			b, err := os.ReadFile(RecipesFilePath)
-			if err != nil {
-				panic(err)
-			}
-
-			rawRecipes := strings.Split(string(b), "\n")
-			rawRecipes = rawRecipes[:len(rawRecipes)-1]
-			var recipes []Recipe
-			for _, raw := range rawRecipes {
-				rawParts := strings.Split(raw, "\t")
-				recipes = append(recipes, Recipe{Title: rawParts[0], Description: rawParts[1]})
-			}
+			var recipes []Recipe = GetAllRecipes()
 
 			vars := mux.Vars(r)
 			titleOfRecipeToEdit := vars["title"]
+
 			var recipeViews []RecipeView
 			for _, r := range recipes {
 				edit := r.Title == titleOfRecipeToEdit
@@ -105,33 +69,12 @@ func main() {
 
 			tmpl.Execute(w, FormData{RecipeViews: recipeViews})
 		} else if r.FormValue("updateBtn") != "" {
-			b, err := os.ReadFile(RecipesFilePath)
-			if err != nil {
-				panic(err)
-			}
-
-			rawRecipes := strings.Split(string(b), "\n")
-			rawRecipes = rawRecipes[:len(rawRecipes)-1]
-			var recipes []Recipe
-			for _, raw := range rawRecipes {
-				rawParts := strings.Split(raw, "\t")
-				recipes = append(recipes, Recipe{Title: rawParts[0], Description: rawParts[1]})
-			}
 
 			oldTitleOfRecipeToUpdate := r.FormValue("oldTitle")
-			for idx, rec := range recipes {
-				if rec.Title == oldTitleOfRecipeToUpdate {
-					recipes[idx].Title = r.FormValue("editTitle")
-					recipes[idx].Description = r.FormValue("editDescription")
-					break
-				}
-			}
+			DeleteRecipe(oldTitleOfRecipeToUpdate)
 
-			updatedRecipes := ""
-			for _, r := range recipes {
-				updatedRecipes += r.Title + "\t" + r.Description + "\n"
-			}
-			os.WriteFile(RecipesFilePath, []byte(updatedRecipes), 0222)
+			updatedRecipe := Recipe{Title: r.FormValue("editTitle"), Description: r.FormValue("editDescription")}
+			SaveRecipe(updatedRecipe)
 
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 		}
