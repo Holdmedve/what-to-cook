@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"html/template"
+	"log"
 	"net/http"
 	"os"
 
@@ -19,6 +20,8 @@ type FormData struct {
 }
 
 func main() {
+	log.Default().Println("'What to cook' application is starting up")
+
 	if _, err := os.Stat(RecipesFilePath); errors.Is(err, os.ErrNotExist) {
 		os.Create(RecipesFilePath)
 	}
@@ -78,5 +81,10 @@ func main() {
 		}
 	})
 
-	http.ListenAndServe("127.0.0.1:80", r)
+	port := "8080"
+	log.Println("Using port " + port)
+	err := http.ListenAndServe(":"+port, r)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
