@@ -7,4 +7,8 @@ todo
     - stop the currently running what-to-cook
     - overwrite the files
     - start the app
+
+
+done:
+- create linux service to autoamtically start up app with machine
 - delete go from the linux machine
